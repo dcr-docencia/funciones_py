@@ -54,7 +54,7 @@ def plot_r_r(x_val,f,
 # Gráfica de función de R2 a R
 
 def plot_r2_r(x_val,y_val,g,
-                titulo='Gráfica de $g(x,y)$',color_escala='viridis',eje_x='x',eje_y='y',eje_z='g(x,y)'):
+                titulo='Gráfica de g(x,y)',color_escala='viridis',eje_x='x',eje_y='y',eje_z='g(x,y)'):
   # Definimos la matriz en RxR
   X, Y = np.meshgrid(x_val, y_val)
   Z = g(X, Y)
@@ -251,7 +251,7 @@ def contour(x_val,y_val,g,niveles,
 # Gráfica de isosuperficies dinámica
 
 def isosurface(x_val,y_val,z_val,F,niveles,
-               titulo="Isosuperficie Dinámica: F(x,y,z) = C",eje_x='x',eje_y='y',eje_z='z'):  
+               titulo="Isosuperficie Dinámica: F(x,y,z) = C",eje_x='x',eje_y='y',eje_z='z'):
   # Matriz para graficar
   X, Y, Z = np.meshgrid(x_val, y_val, z_val)
 
