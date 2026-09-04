@@ -54,18 +54,20 @@ def plot_r_r(x_val,f,
 # Gráfica de función de R2 a R
 
 def plot_r2_r(x_val,y_val,g,
-                titulo='Gráfica de g(x,y)',color_escala='viridis',eje_x='x',eje_y='y',eje_z='g(x,y)'):
+                titulo='Gráfica de $g(x,y)$',color_escala='viridis',eje_x='x',eje_y='y',eje_z='g(x,y)'):
   # Definimos la matriz en RxR
   X, Y = np.meshgrid(x_val, y_val)
   Z = g(X, Y)
+  delta_x=x_val.max()-x_val.min()
+  delta_y=y_val.max()-y_val.min()
   # Graficamos la superficie en Plotly
   fig = go.Figure(data=[go.Surface(
       x=X, y=Y, z=Z,
       showscale=False,
       colorscale=color_escala,
       contours=dict(
-          x=dict(show=True, color='black', start=-1.5, end=1.5, size=0.1),
-          y=dict(show=True, color='black', start=-1.5, end=1.5, size=0.1)
+          x=dict(show=True, color='black', start=x_val.min(), end=x_val.max(), size=0.03*delta_x),
+          y=dict(show=True, color='black', start=y_val.min(), end=y_val.max(), size=0.03*delta_y)
       )
   )])
   # Configuramos el diseño: Ejes y tamaño
@@ -121,6 +123,8 @@ def plot_curves(x_val,y_val,g,niveles,
                 titulo='Gráfica dinámina de curvas de nivel proyectadas',eje_x='x',eje_y='y',eje_z='g(x,y)'):
   X, Y = np.meshgrid(x_val, y_val)
   Z = g(X,Y)
+  delta_x=x_val.max()-x_val.min()
+  delta_y=y_val.max()-y_val.min()
 
   # 3. Alturas del plano interactivo
   alturas = niveles
@@ -147,8 +151,8 @@ def plot_curves(x_val,y_val,g,niveles,
       x=X, y=Y, z=Z,
       colorscale=[[0, 'white'], [1, 'white']], opacity=0.3, showscale=False,
       contours=dict(
-          x=dict(show=True, color='gray', start=-1.5, end=1.5, size=0.15),
-          y=dict(show=True, color='gray', start=-1.5, end=1.5, size=0.15)
+          x=dict(show=True, color='gray', start=x_val.min(), end=x_val.max(), size=0.03*delta_x),
+          y=dict(show=True, color='gray', start=y_val.min(), end=y_val.max(), size=0.03*delta_y)
       ),
       name='Superficie'
   ))
@@ -214,7 +218,7 @@ def plot_curves(x_val,y_val,g,niveles,
       sliders=sliders,
       scene=dict(
           xaxis_title=eje_x, yaxis_title=eje_y, zaxis_title=eje_z,
-          zaxis=dict(range=[0, 2.5]) # Fijamos el piso en 0
+          zaxis=dict(range=[0, g(X,Y).max()]) # Fijamos el piso en 0
       ),
       width=900, height=900, margin=dict(l=0, r=0, b=0, t=50),
       title=dict(text=titulo, x=0.5, font=dict(size=20))
@@ -237,7 +241,7 @@ def contour(x_val,y_val,g,niveles,
   plt.axvline(0,c='k')
   plt.grid(linestyle='--')
   #Creamos las gráficas
-  colores = plt.cm.Set1.colors[:]
+  colores = plt.cm.tab20.colors[:]
   for n in range(len(niveles)):
       plt.contour(X,Y,g(X,Y),levels=[niveles[n]], colors=colores[n])
       plt.plot([], [], color=colores[n], label='g(x,y)=%.1f'%niveles[n])
