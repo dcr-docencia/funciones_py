@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.special import factorial, genlaguerre, sph_harm_y
 import plotly.graph_objects as go
 
-# Graficar (representar en el plano cartesiano), algunos elementos puntuales (x,f(x))
+### Graficar (representar en el plano cartesiano), algunos elementos puntuales (x,f(x))
 
 def scatter_r_r(x_val,f,
                 titulo='$f(x)$'+' vs. '+'$x$',color_puntos='red',eje_x='$x$',eje_y='$f(x)$'):
@@ -29,7 +30,7 @@ def scatter_r_r(x_val,f,
       plt.text(val+delta_xval*0.01,f(val)+delta_f*0.03,'(%.f,%.f)'%(val,f(val)),fontsize=10)
   plt.show()
 
-# Graficar (representar en el plano cartesiano), los elementos (x,f(x)) en un intervalo de R:
+### Graficar (representar en el plano cartesiano), los elementos (x,f(x)) en un intervalo de R:
 
 def plot_r_r(x_val,f,
                 titulo='$f(x)$'+' vs. '+'$x$',color_linea='red',eje_x='$x$',eje_y='$f(x)$'):
@@ -51,10 +52,10 @@ def plot_r_r(x_val,f,
   plt.ylim(f(x_val).min(),f(x_val).max())
   plt.show()
 
-# Gráfica de función de R2 a R
+### Gráfica de función de R2 a R
 
 def plot_r2_r(x_val,y_val,g,
-                titulo='Gráfica de $g(x,y)$',color_escala='viridis',eje_x='x',eje_y='y',eje_z='g(x,y)'):
+                titulo='Gráfica de g(x,y)',color_escala='viridis',eje_x='x',eje_y='y',eje_z='g(x,y)'):
   # Definimos la matriz en RxR
   X, Y = np.meshgrid(x_val, y_val)
   Z = g(X, Y)
@@ -90,7 +91,7 @@ def plot_r2_r(x_val,y_val,g,
   # Mostramos la gráfica
   fig.show()
 
-# Gráfica de curva de nivel x^2+y^2=1
+### Gráfica de curva de nivel x^2+y^2=1
 
 def curve_level():
   # Definimos la matriz en RxR
@@ -117,7 +118,7 @@ def curve_level():
   # Mostramos la gráfica
   plt.show()
 
-#Gráficas dinámina de curvas de nivel proyectadas
+### Gráficas dinámina de curvas de nivel proyectadas
 
 def plot_curves(x_val,y_val,g,niveles,
                 titulo='Gráfica dinámina de curvas de nivel proyectadas',eje_x='x',eje_y='y',eje_z='g(x,y)'):
@@ -226,7 +227,7 @@ def plot_curves(x_val,y_val,g,niveles,
 
   fig.show()
 
-# Gráfica de mapa de contorno
+### Gráfica de mapa de contorno
 
 def contour(x_val,y_val,g,niveles,
             titulo='Mapa de contorno para g(x,y)\n',eje_x='$x$',eje_y='$y$'):
@@ -241,10 +242,15 @@ def contour(x_val,y_val,g,niveles,
   plt.axvline(0,c='k')
   plt.grid(linestyle='--')
   #Creamos las gráficas
-  colores = plt.cm.tab20.colors[:]
+  cmap = plt.cm.Blues
+  colores = cmap(np.linspace(0.3, 1.0, len(niveles)))
   for n in range(len(niveles)):
-      plt.contour(X,Y,g(X,Y),levels=[niveles[n]], colors=colores[n])
-      plt.plot([], [], color=colores[n], label='g(x,y)=%.1f'%niveles[n])
+    val = niveles[n]
+    # Si es menor que 0.01 usa notación científica (.2e), si no, 4 decimales (.4f)
+    lbl = f'{val:.2e}' if abs(val) < 0.01 else f'{val:.4f}'
+
+    plt.contour(X, Y, g(X, Y), levels=[val], colors=[colores[n]])
+    plt.plot([], [], color=colores[n], label=lbl)
   plt.xlabel(eje_x)
   plt.ylabel(eje_y)
   plt.title(titulo)
@@ -252,12 +258,12 @@ def contour(x_val,y_val,g,niveles,
   # Mostramos la gráfica
   plt.show()
 
-# Gráfica de isosuperficies dinámica
+### Gráfica de isosuperficies dinámica
 
 def isosurface(x_val,y_val,z_val,F,niveles,
                titulo="Isosuperficie Dinámica: F(x,y,z) = C",eje_x='x',eje_y='y',eje_z='z'):
   # Matriz para graficar
-  X, Y, Z = np.meshgrid(x_val, y_val, z_val)
+  X, Y, Z = np.meshgrid(x_val, y_val, z_val, indexing='ij')
 
   # 2. DEFINES TU FUNCIÓN AQUÍ (Ejemplo: Esfera)
   valores = F(X,Y,Z)
@@ -296,7 +302,7 @@ def isosurface(x_val,y_val,z_val,F,niveles,
       steps=[dict(
           method='animate',
           args=[[str(c)], dict(mode='immediate', frame=dict(duration=0, redraw=True), transition=dict(duration=0))],
-          label=f"{c:.2f}"
+          label=f"{c:.4f}"
       ) for c in niveles]
   )]
 
@@ -304,14 +310,254 @@ def isosurface(x_val,y_val,z_val,F,niveles,
   fig.update_layout(
       sliders=sliders,
       scene=dict(
-          xaxis_title=eje_x, yaxis_title=eje_y, zaxis_title=eje_z,
-          # MUY IMPORTANTE: Fijamos los límites de la "caja" para que no haga zoom automático
-          xaxis=dict(range=[-3, 3]),
-          yaxis=dict(range=[-3, 3]),
-          zaxis=dict(range=[-3, 3])
-      ),
+        xaxis_title=eje_x,
+        yaxis_title=eje_y,
+        zaxis_title=eje_z,
+        # Límites dinámicos basados en los valores de entrada:
+        xaxis=dict(range=[np.min(x_val), np.max(x_val)]),
+        yaxis=dict(range=[np.min(y_val), np.max(y_val)]),
+        zaxis=dict(range=[np.min(z_val), np.max(z_val)]),
+        aspectmode="data",  # Mantiene las proporciones espaciales 1:1:1 reales
+    ),
       width=800, height=800, margin=dict(l=0, r=0, b=0, t=50),
       title=dict(text=titulo, x=0.5, font=dict(size=20))
+  )
+
+  fig.show()
+
+### Función para validar elección de números cuánticos
+
+def validate_quantum(n, l, m):
+    """Verifica las restricciones físicas de n, l y m con mensajes detallados."""
+    # 1. Verificar si son enteros
+    for nombre, val in [("n", n), ("l", l), ("m", m)]:
+        if not isinstance(val, (int, np.integer)):
+            raise TypeError(
+                f"El número cuántico {nombre} debe ser entero. Recibido: {val} ({type(val).__name__})."
+            )
+
+    # 2. Restricción sobre el número cuántico principal n
+    if n < 1:
+        raise ValueError(
+            f"Número cuántico principal inválido (n = {n}).\n"
+            f"  -> Regla: n debe ser un entero positivo mayor o igual a 1 (n = 1, 2, 3, ...)."
+        )
+
+    # 3. Restricción sobre el momento angular orbital l
+    if l < 0 or l >= n:
+        permitidos_l = list(range(n))
+        raise ValueError(
+            f"Momento angular orbital incompatible (l = {l}) para n = {n}.\n"
+            f"  -> Regla: 0 <= l < n.\n"
+            f"  -> Para n = {n}, los valores permitidos de l son {permitidos_l}."
+        )
+
+    # 4. Restricción sobre el número cuántico magnético m
+    if abs(m) > l:
+        permitidos_m = list(range(-l, l + 1))
+        raise ValueError(
+            f"Número cuántico magnético incompatible (m = {m}) para l = {l}.\n"
+            f"  -> Regla: -l <= m <= l.\n"
+            f"  -> Para l = {l}, los valores permitidos de m son {permitidos_m}."
+        )
+
+    print("Los números cuánticos son válidos.")
+
+### Función radial
+
+def radial(n, l, x, y, z, Z=1):
+    """Verifica las restricciones físicas de n y l con mensajes detallados."""
+    # 1. Verificar si son enteros
+    for nombre, val in [("n", n), ("l", l)]:
+        if not isinstance(val, (int, np.integer)):
+            raise TypeError(
+                f"El número cuántico {nombre} debe ser entero. Recibido: {val} ({type(val).__name__})."
+            )
+    # 2. Restricción sobre el número cuántico principal n
+    if n < 1:
+        raise ValueError(
+            f"Número cuántico principal inválido (n = {n}).\n"
+            f"  -> Regla: n debe ser un entero positivo mayor o igual a 1 (n = 1, 2, 3, ...)."
+        )
+    # 3. Restricción sobre el momento angular orbital l
+    if l < 0 or l >= n:
+        permitidos_l = list(range(n))
+        raise ValueError(
+            f"Momento angular orbital incompatible (l = {l}) para n = {n}.\n"
+            f"  -> Regla: 0 <= l < n.\n"
+            f"  -> Para n = {n}, los valores permitidos de l son {permitidos_l}."
+        )
+    # 4. Parámetros físicos en unidades atómicas (a_0 = 1 bohr)
+    alpha = Z/n
+    # 5. Distancia radial
+    r = np.sqrt(x**2 + y**2 + z**2)
+    rho = 2.0 * alpha * r
+    # 6. Prefactor de normalización
+    norm_R = (2.0 * alpha) ** (l + 1.5) * np.sqrt(
+        factorial(n - l - 1) / (2.0 * n * factorial(n + l))
+    )
+    # 7. Polinomio de Laguerre y función radial
+    L_poly = genlaguerre(n - l - 1, 2 * l + 1)(rho)
+    R_nl = norm_R * (r**l) * np.exp(-alpha * r) * L_poly
+    return R_nl
+
+### Función angular
+
+def angular(l, m, x, y, z):
+    """Verifica las restricciones físicas de n y l con mensajes detallados."""
+    # 1. Verificar si son enteros
+    for nombre, val in [("n", n), ("l", l)]:
+        if not isinstance(val, (int, np.integer)):
+            raise TypeError(
+                f"El número cuántico {nombre} debe ser entero. Recibido: {val} ({type(val).__name__})."
+            )
+    # 2. Restricción sobre el número cuántico principal n
+    if n < 1:
+        raise ValueError(
+            f"Número cuántico principal inválido (n = {n}).\n"
+            f"  -> Regla: n debe ser un entero positivo mayor o igual a 1 (n = 1, 2, 3, ...)."
+        )
+    """Calcula el armónico esférico real Y_{lm} a partir de coordenadas cartesianas."""
+    # 1. Validación de m
+    if not isinstance(m, (int, np.integer)):
+        raise TypeError(f"El número cuántico m debe ser entero. Recibido: {m}.")
+    if abs(m) > l:
+        raise ValueError(
+            f"m incompatible (m = {m}) para l = {l}. Regla: -l <= m <= l."
+        )
+    # 2. Conversión a esféricas (aquí sí se necesita r_safe)
+    r = np.sqrt(x**2 + y**2 + z**2)
+    r_safe = np.where(r == 0, 1e-10, r)
+    theta = np.arccos(np.clip(z / r_safe, -1.0, 1.0))  # colatitud [0, pi]
+    phi = np.mod(np.arctan2(y, x), 2 * np.pi)  # azimut [0, 2*pi)
+    # 3. Armónico esférico real
+    # Nota: sph_harm_y toma (l, m, theta, phi)
+    if m == 0:
+        Y_real = sph_harm_y(l, 0, theta, phi).real
+    elif m > 0:
+        Y_real = np.sqrt(2) * ((-1) ** m) * sph_harm_y(l, m, theta, phi).real
+    else:
+        m_abs = abs(m)
+        Y_real = (
+            np.sqrt(2) * ((-1) ** m_abs) * sph_harm_y(l, m_abs, theta, phi).imag
+        )
+    return Y_real
+
+### Graficar isosuperficies con signo
+
+def iso_signo(
+    x_val,
+    y_val,
+    z_val,
+    f,
+    niveles,
+    titulo="predef",
+    eje_x="x",
+    eje_y="y",
+    eje_z="z",
+):
+  """Grafica isosuperficies dinámicas evaluando en ±C con:
+
+  - Positivo (+) en Azul
+  - Negativo (-) en Rojo
+  """
+  # 1. Malla cartesiana 3D
+  X, Y, Z = np.meshgrid(x_val, y_val, z_val, indexing="ij")
+
+  # 2. Evaluación del campo escalar
+  valores = f(X, Y, Z)
+
+  if titulo == "predef":
+    titulo = "Isosuperficie f(x,y,z) = "+'|C|'
+
+  c0 = niveles[0]
+
+  # 3. Traza inicial (RdBu: 0 -> Rojo [-c0], 1 -> Azul [+c0])
+  fig = go.Figure()
+  fig.add_trace(
+      go.Isosurface(
+          x=X.flatten(),
+          y=Y.flatten(),
+          z=Z.flatten(),
+          value=valores.flatten(),
+          isomin=-c0,
+          isomax=c0,
+          cmin=-c0,
+          cmax=c0,
+          surface_count=2,
+          colorscale="RdBu",  # Rojo para negativo, Azul para positivo
+          opacity=0.85,
+          showscale=False,
+          colorbar=dict(title=dict(text="f(x,y,z)")),
+          caps=dict(x_show=False, y_show=False, z_show=False),
+      )
+  )
+
+  # 4. Fotogramas dinámicos para el deslizador
+  frames = []
+  for c in niveles:
+    tag = f"{c:.2e}" if c < 0.01 else f"{c:.3f}"
+    frames.append(
+        go.Frame(
+            name=tag,
+            data=[
+                go.Isosurface(
+                    isomin=-c,
+                    isomax=c,
+                    cmin=-c,
+                    cmax=c,
+                    surface_count=2,
+                    colorscale="RdBu",
+                )
+            ],
+        )
+    )
+  fig.frames = frames
+
+  # 5. Deslizador
+  steps = []
+  for c in niveles:
+    tag = f"{c:.2e}" if c < 0.01 else f"{c:.3f}"
+    steps.append(
+        dict(
+            method="animate",
+            args=[
+                [tag],
+                dict(
+                    mode="immediate",
+                    frame=dict(duration=0, redraw=True),
+                    transition=dict(duration=0),
+                ),
+            ],
+            label=tag,
+        )
+    )
+
+  sliders = [
+      dict(
+          active=0,
+          currentvalue=dict(prefix="|C|="),
+          pad=dict(t=50),
+          steps=steps,
+      )
+  ]
+
+  # 6. Configuración de ejes y caja
+  fig.update_layout(
+      sliders=sliders,
+      scene=dict(
+          xaxis_title=eje_x,
+          yaxis_title=eje_y,
+          zaxis_title=eje_z,
+          xaxis=dict(range=[np.min(x_val), np.max(x_val)]),
+          yaxis=dict(range=[np.min(y_val), np.max(y_val)]),
+          zaxis=dict(range=[np.min(z_val), np.max(z_val)]),
+          aspectmode="data",
+      ),
+      width=800,
+      height=750,
+      margin=dict(l=0, r=0, b=0, t=50),
+      title=dict(text=titulo, x=0.5, font=dict(size=18)),
   )
 
   fig.show()
