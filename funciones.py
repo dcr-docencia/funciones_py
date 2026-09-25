@@ -411,12 +411,7 @@ def angular(l, m, x, y, z):
             raise TypeError(
                 f"El número cuántico {nombre} debe ser entero. Recibido: {val} ({type(val).__name__})."
             )
-    # 2. Restricción sobre el número cuántico principal n
-    if n < 1:
-        raise ValueError(
-            f"Número cuántico principal inválido (n = {n}).\n"
-            f"  -> Regla: n debe ser un entero positivo mayor o igual a 1 (n = 1, 2, 3, ...)."
-        )
+
     """Calcula el armónico esférico real Y_{lm} a partir de coordenadas cartesianas."""
     # 1. Validación de m
     if not isinstance(m, (int, np.integer)):
