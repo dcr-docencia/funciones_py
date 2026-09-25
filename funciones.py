@@ -406,7 +406,7 @@ def radial(n, l, x, y, z, Z=1):
 def angular(l, m, x, y, z):
     """Verifica las restricciones físicas de n y l con mensajes detallados."""
     # 1. Verificar si son enteros
-    for nombre, val in [("n", n), ("l", l)]:
+    for nombre, val in [("l", l), ("m", m)]:
         if not isinstance(val, (int, np.integer)):
             raise TypeError(
                 f"El número cuántico {nombre} debe ser entero. Recibido: {val} ({type(val).__name__})."
